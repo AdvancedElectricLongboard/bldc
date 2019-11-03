@@ -495,6 +495,20 @@ static THD_FUNCTION(adc_thread, arg) {
 			}
 		}
 
+		// Send battery voltage to the other ESCs seen on the CAN-bus
+		if(config.multi_esc)
+		{
+			float voltage = app_adc_get_voltage();
+
+			for (int i = 0;i < CAN_STATUS_MSGS_TO_STORE;i++) {
+				can_status_msg *msg = comm_can_get_status_msg_index(i);
+
+				if (msg->id >= 0 && UTILS_AGE_S(msg->rx_time) < MAX_CAN_AGE) {
+					comm_can_set_battery_voltage(msg->id, voltage);
+				}
+			}
+		}
+
 		if (current_mode) {
 			if (current_mode_brake) {
 				mc_interface_set_brake_current_rel(current_rel);
