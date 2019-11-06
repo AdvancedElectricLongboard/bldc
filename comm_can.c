@@ -314,14 +314,24 @@ void comm_can_set_pos(uint8_t controller_id, float pos) {
 			((uint32_t)CAN_PACKET_SET_POS << 8), buffer, send_index);
 }
 
-void comm_can_set_battery_voltage(uint8_t controller_id, float voltage)
+void comm_can_set_battery_voltage(uint8_t controller_id)
 {
 	int32_t send_index = 0;
 	uint8_t buffer[4];
 	uint32_t voltage_temp = GET_INPUT_VOLTAGE();
-	buffer_append_int32(buffer, (int32_t)(voltage), &send_index);
+	buffer_append_int32(buffer, (int32_t)(voltage_temp), &send_index);
 	comm_can_transmit_eid(controller_id |
 			((uint32_t)CAN_PACKET_SET_BATTERY_VOLTAGE << 8), buffer, send_index);
+}
+
+void comm_can_set_throttle_encoded_nun(uint8_t controller_id, float throttle)
+{
+	int32_t send_index = 0;
+	uint8_t buffer[4];
+	uint32_t voltage_temp = GET_INPUT_VOLTAGE();
+	buffer_append_int32(buffer, (int32_t)(throttle*100), &send_index);
+	comm_can_transmit_eid(controller_id |
+		((uint32_t)CAN_PACKET_SET_THROTTLE << 8), buffer, send_index);
 }
 
 /**

@@ -53,6 +53,7 @@ static volatile bool is_running = false;
 void app_adc_configure(adc_config *conf) {
 	config = *conf;
 	ms_without_power = 0.0;
+	config.multi_esc = TRUE;
 }
 
 void app_adc_start(bool use_rx_tx) {
@@ -491,20 +492,6 @@ static THD_FUNCTION(adc_thread, arg) {
 
 				if (msg->id >= 0 && UTILS_AGE_S(msg->rx_time) < MAX_CAN_AGE) {
 					comm_can_set_duty(msg->id, duty);
-				}
-			}
-		}
-
-		// Send battery voltage to the other ESCs seen on the CAN-bus
-		if(config.multi_esc)
-		{
-			float voltage = app_adc_get_voltage();
-
-			for (int i = 0;i < CAN_STATUS_MSGS_TO_STORE;i++) {
-				can_status_msg *msg = comm_can_get_status_msg_index(i);
-
-				if (msg->id >= 0 && UTILS_AGE_S(msg->rx_time) < MAX_CAN_AGE) {
-					comm_can_set_battery_voltage(msg->id, voltage);
 				}
 			}
 		}

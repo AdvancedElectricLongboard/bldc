@@ -232,6 +232,20 @@ static THD_FUNCTION(output_thread, arg) {
 			continue;
 		}
 
+		// Send throttle in percentage to the other ESCs seen on the CAN-bus
+		if(config.multi_esc)
+		{
+			float throttle = app_nunchuk_get_decoded_chuk(); //! in perenct
+
+			for (int i = 0;i < CAN_STATUS_MSGS_TO_STORE;i++) {
+				can_status_msg *msg = comm_can_get_status_msg_index(i);
+
+				if (msg->id >= 0 && UTILS_AGE_S(msg->rx_time) < MAX_CAN_AGE) {
+					comm_can_set_throttle_encoded_nun(msg->id, throttle);
+				}
+			}
+		}
+
 		const volatile mc_configuration *mcconf = mc_interface_get_configuration();
 		static bool is_reverse = false;
 		static bool was_z = false;
