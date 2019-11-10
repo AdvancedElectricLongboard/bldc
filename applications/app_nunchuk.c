@@ -264,10 +264,24 @@ static THD_FUNCTION(output_thread, arg) {
 			if (chuck_d.rev_has_state) {
 				is_reverse = chuck_d.is_rev;
 			} else if (chuck_d.bt_z && !was_z) {
-				if (is_reverse) {
+				if (is_reverse)
+				{
 					is_reverse = false;
-				} else {
+				}
+				else
+				{
 					is_reverse = true;
+				}
+
+				if(config.multi_esc)
+				{
+					for (int i = 0;i < CAN_STATUS_MSGS_TO_STORE;i++) {
+						can_status_msg *msg = comm_can_get_status_msg_index(i);
+
+						if (msg->id >= 0 && UTILS_AGE_S(msg->rx_time) < MAX_CAN_AGE) {
+							comm_can_set_reverse_mode(msg->id, is_reverse);
+						}
+					}
 				}
 			}
 		}
