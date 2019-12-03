@@ -32,10 +32,12 @@
 #include "crc.h"
 #include "packet.h"
 #include "hw.h"
+#include "utils.h"
 #include "canard_driver.h"
 
 // Settings
 #define RX_FRAMES_SIZE	100
+#define MAX_CAN_AGE		0.1
 #define RX_BUFFER_SIZE	PACKET_MAX_PL_LEN
 
 #if CAN_ENABLE
@@ -776,7 +778,6 @@ static THD_FUNCTION(cancom_read_thread, arg) {
 		msg_t result = canReceive(&HW_CAN_DEV, CAN_ANY_MAILBOX, &rxmsg, TIME_IMMEDIATE);
 
 		while (result == MSG_OK) {
-
 			chMtxLock(&can_rx_mtx);
 			rx_frames[rx_frame_write++] = rxmsg;
 			if (rx_frame_write == RX_FRAMES_SIZE) {
@@ -808,6 +809,14 @@ static THD_FUNCTION(cancom_process_thread, arg) {
 
 	for(;;) {
 		chEvtWaitAny((eventmask_t)1);
+
+		for (int i = 0;i < CAN_STATUS_MSGS_TO_STORE;i++) {
+			can_status_msg *msg = comm_can_get_status_msg_index(i);
+
+			if (msg->id >= 0 && UTILS_AGE_S(msg->rx_time) < MAX_CAN_AGE) {
+				comm_can_set_battery_voltage(msg->id);
+			}
+		}
 
 		if (app_get_configuration()->uavcan_enable) {
 			continue;
