@@ -320,7 +320,7 @@ void comm_can_set_battery_voltage(uint8_t controller_id)
 {
 	int32_t send_index = 0;
 	uint8_t buffer[4];
-	uint32_t voltage_temp = GET_INPUT_VOLTAGE();
+	volatile float voltage_temp = GET_INPUT_VOLTAGE()*1000;
 	buffer_append_int32(buffer, (int32_t)(voltage_temp), &send_index);
 	comm_can_transmit_eid(controller_id |
 			((uint32_t)CAN_PACKET_SET_BATTERY_VOLTAGE << 8), buffer, send_index);
@@ -330,6 +330,7 @@ void comm_can_set_throttle_encoded_nun(uint8_t controller_id, float throttle)
 {
 	int32_t send_index = 0;
 	uint8_t buffer[4];
+	volatile int32_t test = (int32_t)(throttle*100);
 	buffer_append_int32(buffer, (int32_t)(throttle*100), &send_index);
 	comm_can_transmit_eid(controller_id |
 		((uint32_t)CAN_PACKET_SET_THROTTLE << 8), buffer, send_index);
@@ -339,7 +340,7 @@ void comm_can_set_reverse_mode(uint8_t controller_id, bool reverse)
 {
 	int32_t send_index = 0;
 	uint8_t buffer[4];
-	buffer_append_int32(buffer, (int32_t)(reverse), &send_index);
+	buffer_append_int16(buffer, (int16_t)(reverse), &send_index);
 	comm_can_transmit_eid(controller_id |
 		((uint32_t)CAN_PACKET_SET_RETURN << 8), buffer, send_index);
 }
