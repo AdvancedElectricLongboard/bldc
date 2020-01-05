@@ -213,6 +213,19 @@ static THD_FUNCTION(output_thread, arg) {
 		static float rpm_filtered = 0.0;
 		UTILS_LP_FAST(rpm_filtered, mc_interface_get_rpm(), 0.5);
 
+		if (config.multi_esc)
+		{
+			//float current = mc_interface_get_tot_current_directional_filtered();
+			for (int i = 0;i < CAN_STATUS_MSGS_TO_STORE;i++)
+			{
+				can_status_msg *msg = comm_can_get_status_msg_index(i);
+				if (msg->id >= 0 && UTILS_AGE_S(msg->rx_time) < MAX_CAN_AGE)
+				{
+					comm_can_set_rpm(msg->id, (rpm_filtered/7));
+				}
+			}
+		}
+
 		const float dt = (float)OUTPUT_ITERATION_TIME_MS / 1000.0;
 
 		if (timeout_has_timeout() || chuck_error != 0 || config.ctrl_type == CHUK_CTRL_TYPE_NONE) {
@@ -272,16 +285,16 @@ static THD_FUNCTION(output_thread, arg) {
 				{
 					is_reverse = true;
 				}
+			}
+		}
 
-				if(config.multi_esc)
-				{
-					for (int i = 0;i < CAN_STATUS_MSGS_TO_STORE;i++) {
-						can_status_msg *msg = comm_can_get_status_msg_index(i);
+		if(config.multi_esc)
+		{
+			for (int i = 0;i < CAN_STATUS_MSGS_TO_STORE;i++) {
+				can_status_msg *msg = comm_can_get_status_msg_index(i);
 
-						if (msg->id >= 0 && UTILS_AGE_S(msg->rx_time) < MAX_CAN_AGE) {
-							comm_can_set_reverse_mode(msg->id, is_reverse);
-						}
-					}
+				if (msg->id >= 0 && UTILS_AGE_S(msg->rx_time) < MAX_CAN_AGE) {
+					comm_can_set_reverse_mode(msg->id, is_reverse);
 				}
 			}
 		}
@@ -359,6 +372,7 @@ static THD_FUNCTION(output_thread, arg) {
 			}
 
 			mc_interface_set_pid_speed(pid_rpm);
+
 
 			// Send the same current to the other controllers
 			if (config.multi_esc) {
