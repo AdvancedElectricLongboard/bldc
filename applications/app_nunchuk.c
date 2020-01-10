@@ -248,7 +248,7 @@ static THD_FUNCTION(output_thread, arg) {
 		// Send throttle in percentage to the other ESCs seen on the CAN-bus
 		if(config.multi_esc)
 		{
-			float throttle = app_nunchuk_get_decoded_chuk(); //! in perenct
+			volatile float throttle = app_nunchuk_get_decoded_chuk(); //! in perenct
 
 			for (int i = 0;i < CAN_STATUS_MSGS_TO_STORE;i++) {
 				can_status_msg *msg = comm_can_get_status_msg_index(i);
@@ -414,36 +414,36 @@ static THD_FUNCTION(output_thread, arg) {
 		float current_highest = current_now;
 		float duty_highest_abs = fabsf(duty_now);
 
-		if (config.multi_esc) {
-			for (int i = 0;i < CAN_STATUS_MSGS_TO_STORE;i++) {
-				can_status_msg *msg = comm_can_get_status_msg_index(i);
-
-				if (msg->id >= 0 && UTILS_AGE_S(msg->rx_time) < MAX_CAN_AGE) {
-					float rpm_tmp = msg->rpm;
-					if (is_reverse) {
-						rpm_tmp = -rpm_tmp;
-					}
-
-					if (rpm_tmp < rpm_lowest) {
-						rpm_lowest = rpm_tmp;
-					}
-
-					// Make the current directional
-					float msg_current = msg->current;
-					if (msg->duty < 0.0) {
-						msg_current = -msg_current;
-					}
-
-					if (fabsf(msg_current) > fabsf(current_highest)) {
-						current_highest = msg_current;
-					}
-
-					if (fabsf(msg->duty) > duty_highest_abs) {
-						duty_highest_abs = fabsf(msg->duty);
-					}
-				}
-			}
-		}
+//		if (config.multi_esc) {
+//			for (int i = 0;i < CAN_STATUS_MSGS_TO_STORE;i++) {
+//				can_status_msg *msg = comm_can_get_status_msg_index(i);
+//
+//				if (msg->id >= 0 && UTILS_AGE_S(msg->rx_time) < MAX_CAN_AGE) {
+//					float rpm_tmp = msg->rpm;
+//					if (is_reverse) {
+//						rpm_tmp = -rpm_tmp;
+//					}
+//
+//					if (rpm_tmp < rpm_lowest) {
+//						rpm_lowest = rpm_tmp;
+//					}
+//
+//					// Make the current directional
+//					float msg_current = msg->current;
+//					if (msg->duty < 0.0) {
+//						msg_current = -msg_current;
+//					}
+//
+//					if (fabsf(msg_current) > fabsf(current_highest)) {
+//						current_highest = msg_current;
+//					}
+//
+//					if (fabsf(msg->duty) > duty_highest_abs) {
+//						duty_highest_abs = fabsf(msg->duty);
+//					}
+//				}
+//			}
+//		}
 
 		if (config.use_smart_rev) {
 			bool duty_control = false;
