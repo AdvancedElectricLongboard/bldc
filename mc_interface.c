@@ -75,6 +75,7 @@ static volatile float m_temp_motor;
 static volatile float m_gate_driver_voltage;
 static volatile float m_motor_current_unbalance;
 static volatile float m_motor_current_unbalance_error_rate;
+static volatile bool m_brake_mode;
 
 // Sampling variables
 #define ADC_SAMPLE_MAX_LEN		2000
@@ -140,6 +141,7 @@ void mc_interface_init(mc_configuration *configuration) {
 	m_gate_driver_voltage = 0.0;
 	m_motor_current_unbalance = 0.0;
 	m_motor_current_unbalance_error_rate = 0.0;
+	m_brake_mode = false;
 
 	m_sample_len = 1000;
 	m_sample_int = 1;
@@ -549,7 +551,7 @@ void mc_interface_set_brake_current(float current) {
 		break;
 
 	case MOTOR_TYPE_FOC:
-		mcpwm_foc_set_brake_current(DIR_MULT * current);
+		mcpwm_foc_set_brake_current(DIR_MULT * (abs(current+10)));
 		break;
 
 	case MOTOR_TYPE_GPD:
@@ -560,6 +562,16 @@ void mc_interface_set_brake_current(float current) {
 	default:
 		break;
 	}
+}
+
+bool mc_interface_get_brake_mode(void)
+{
+	return m_brake_mode;
+}
+
+void mc_interface_set_brake_mode(bool val)
+{
+	m_brake_mode = val;
 }
 
 /**

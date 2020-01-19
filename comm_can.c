@@ -831,7 +831,7 @@ static THD_FUNCTION(cancom_process_thread, arg) {
 				uint8_t id = rxmsg.EID & 0xFF;
 				CAN_PACKET_ID cmd = rxmsg.EID >> 8;
 
-				if (id == 255 || id == app_get_configuration()->controller_id) {
+				if (id == 255 || id < 255||id == app_get_configuration()->controller_id) {
 					switch (cmd) {
 					case CAN_PACKET_SET_DUTY:
 						ind = 0;
@@ -847,7 +847,12 @@ static THD_FUNCTION(cancom_process_thread, arg) {
 
 					case CAN_PACKET_SET_CURRENT_BRAKE:
 						ind = 0;
-						mc_interface_set_brake_current(buffer_get_float32(rxmsg.data8, 1e3, &ind));
+						volatile int32_t buf = buffer_get_int32(rxmsg.data32, &ind);
+						if(buf < 0)
+							mc_interface_set_brake_mode(true);
+						else
+							mc_interface_set_brake_mode(false);
+
 						timeout_reset();
 						break;
 
